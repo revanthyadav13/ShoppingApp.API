@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "+QEx1NrnT3Vb6AX8R9q3qOpxSo+JT8x1Ndi7VjA6fQk=",
+  "Source": "ShoppingApp.API",
+  "BasePath": "_content/ShoppingApp.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
