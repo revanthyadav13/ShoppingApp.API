@@ -1,11 +1,48 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ShoppingApp.API.Models;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            // Skip the default behavior to prevent redirect on unauthorized requests
+            context.HandleResponse();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            var result = JsonSerializer.Serialize(new { message = "Unauthorized" });
+            return context.Response.WriteAsync(result);
+        }
+    };
+});
 
 builder.Services.AddControllers();
 
@@ -35,7 +72,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
